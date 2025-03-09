@@ -111,11 +111,14 @@ def handle_client(client_socket, addr):
                         if len(emails) == 0 or emails == [""]:  # Check if mailbox is empty
                             send_response(client_socket, POP3_ERR + " No messages")
                         else:
+                            message = ""
                             for i, email in enumerate(emails):
                                 email_size = len(email.encode())  # Get email size in bytes
-                                send_response(client_socket, f"{i+1} {email_size}")
+                                message += f"{i+1} {email_size}\r\n"
+                            
+                            message += POP3_OK + " End of message list"
 
-                            send_response(client_socket, POP3_OK + " End of message list")
+                            send_response(client_socket, message)
 
             elif command == POP3_RETR:
                 if not authenticated:
@@ -135,9 +138,8 @@ def handle_client(client_socket, addr):
                             send_response(client_socket, POP3_ERR + " No such message")
                         else:
                             email_content = emails[email_index]
-                            send_response(client_socket, POP3_OK + " Message follows")
-                            client_socket.send(email_content.encode())
-                            send_response(client_socket, ".")
+                            message = POP3_OK + " Message follows\r\n" + email_content + "\r\n."
+                            send_response(client_socket, message)
 
             elif command == POP3_DELE:
                 if not authenticated:
