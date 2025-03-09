@@ -147,8 +147,6 @@ def main():
   
         elif choice == "b":
             list_emails(pop3_socket)
-            while True:
-                input()
 
         elif choice == "c":
             print("Search by:")
