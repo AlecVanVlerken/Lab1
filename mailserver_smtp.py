@@ -81,9 +81,9 @@ def start_mail_server(port, mailbox_dir=MAILBOX_DIR):
     print(f"Mail server running on port {port}...")
     
     while True:
-        client_sock, addr = server_socket.accept()
+        client_socket, addr = server_socket.accept()
         print(f"Connection from {addr}")
-        handle_client(client_sock, mailbox_dir)
+        handle_client(client_socket, mailbox_dir)
 
 if __name__ == "__main__":
     import sys
