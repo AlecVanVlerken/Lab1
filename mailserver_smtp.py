@@ -2,14 +2,19 @@ import socket
 import os
 import datetime
 
+
 MAILBOX_DIR = "./users"
 
 
+# Maak een socket aan
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Maxence
 def handle_client(client_socket, mailbox_dir):
     try:
         domain_name = "kuleuven.be"  # Hardcode for now, maybe use dynamically fetched domain name later 
         client_socket.send(f"220 {domain_name} Service Ready\r\n".encode())
 
+# Bind de socket aan alle IP-adressen van de computer en de opgegeven poort
+server_socket.bind(("0.0.0.0", port)) #Ixtgor
         mail_data = ""
         sender, recipient = None, None
         
@@ -69,6 +74,8 @@ def handle_client(client_socket, mailbox_dir):
         client_socket.send(f"221 {domain_name} Service closing transmission channel\r\n".encode())
         client_socket.close()
 
+print(f"SMTP-server draait op poort {port} en wacht op verbindingen...")
+
 
 def start_mail_server(port, mailbox_dir=MAILBOX_DIR):
     if not os.path.exists(mailbox_dir):
@@ -99,3 +106,4 @@ if __name__ == "__main__":
         sys.exit(1)
     
     start_mail_server(my_port)
+
