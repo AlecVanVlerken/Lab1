@@ -5,7 +5,7 @@ import datetime
 
 MAILBOX_DIR = "./users"
 
-
+# note: foute inputs en randgevallen vermijden door deze te hardcoden
 # Maak een socket aan
 def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de client socket ook niet met TCP werkt?
     try:
@@ -23,7 +23,7 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 break
             #moeten we niet checken dat eerst helo gestuur is, voor mail from...
             # HELO
-            if data.startswith("HELO"):
+            if data.startswith("HELO"): #wat gebeurt als ik helo niet schrijf ? (telnet)
                 client_socket.send(f"250 OK Hello {domain_name}\r\n".encode())
             
             # MAIL
@@ -64,10 +64,10 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 
                 # Add time to the received message
                 timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
-                mail_data = f"\n{mail_data}\nReceived: {timestamp}\n."
+                mail_data = f"\n{mail_data}\n"
                 formatted_mail = (
                     f"From: {sender}\n"
-                    f"To: {recipient}@{recipient_domain}\n"
+                    f"To: {recipient}\n"
                     f"Subject: {subject if subject else 'No Subject'}\n"
                     f"Received: {timestamp}\n"
                     f"{mail_data.strip()}\n.\n"
@@ -80,35 +80,6 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 
                 client_socket.send(b"250 Message accepted for delivery\r\n")
 
-                '''        
-        # Extract subject if found
-        if line.startswith("Subject:"):
-            subject = line[len("Subject:"):].strip()
-            if len(subject) > 150:
-                subject = subject[:150]  # Trim subject to 150 characters
-        else:
-            mail_data += line + "\n"
-
-    # Add timestamp
-    timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
-
-    # Construct the email in the requested format
-    formatted_mail = (
-        f"From: {sender}\n"
-        f"To: {recipient}@{recipient_domain}\n"
-        f"Subject: {subject if subject else 'No Subject'}\n"
-        f"Received: {timestamp}\n"
-        f"{mail_data.strip()}\n.\n"
-    )
-
-    # Save the formatted email to the recipient's mailbox
-    mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt")
-    with open(mailbox_path, "a") as mailbox:
-        mailbox.write(formatted_mail)
-
-    client_socket.send(b"250 Message accepted for delivery\r\n")
-
-                '''
             
             # QUIT
             elif data.startswith("QUIT"):
