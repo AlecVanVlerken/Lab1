@@ -7,22 +7,23 @@ MAILBOX_DIR = "./users"
 
 
 # Maak een socket aan
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Maxence
-def handle_client(client_socket, mailbox_dir):
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = ipv4 adres en SOCK_STREAM = socket communiceert via TCP
+def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de client socket ook niet met TCP werkt?
     try:
         domain_name = "kuleuven.be"  # Hardcode for now, maybe use dynamically fetched domain name later 
-        client_socket.send(f"220 {domain_name} Service Ready\r\n".encode())
+        client_socket.send(f"220 {domain_name} Service Ready\r\n".encode()) 
 
-# Bind de socket aan alle IP-adressen van de computer en de opgegeven poort
-server_socket.bind(("0.0.0.0", port)) #Ixtgor
+        # Bind de socket aan alle IP-adressen van de computer en de opgegeven poort
+        # server_socket.bind(("0.0.0.0", port))  ??? in start_mail_server
         mail_data = ""
         sender, recipient = None, None
         
         while True:
-            data = client_socket.recv(1024).decode()
-            if not data:
-                break
-            
+            data = client_socket.recv(1024).decode() #waarom max 1024 bytes ?? ongv 8 zinnen
+            print(data)
+            #if not data: PAS OP, OPNIEUW ACTIVEREN
+            #    break
+            #moeten we niet checken dat eerst helo gestuur is, voor mail from...
             # HELO
             if data.startswith("HELO"):
                 client_socket.send(f"250 OK Hello {domain_name}\r\n".encode())
@@ -34,15 +35,23 @@ server_socket.bind(("0.0.0.0", port)) #Ixtgor
             
             # RCPT
             elif data.startswith("RCPT TO:"):
-                recipient = data.split(":")[1].strip().split('@')[0]
+                recipient = data.split(":")[1].strip()
+                #recipient = data.split(":")[1].strip().split('@')[0]
+                print(recipient)
+                print(recipient)
+                #recipient = data.split(":")[1].strip()
                 recipient_domain = data.split(":")[1].strip().split('@')[1]
 
                 # Check if the recipient exists
+                print(f"DEBUG: mailbox_dir = {mailbox_dir}")
+                print(f"DEBUG: recipient = {recipient}")
+                print(f"DEBUG: Full path = {os.path.join(mailbox_dir, recipient)}")
+
                 if os.path.exists(os.path.join(mailbox_dir, recipient)):
                     client_socket.send(f"250 OK Recipient {recipient}\r\n".encode())
                 else:
                     client_socket.send(b"550 No such user\r\n")
-                    break
+                    continue
             
             # DATA
             elif data.startswith("DATA"):
@@ -74,7 +83,7 @@ server_socket.bind(("0.0.0.0", port)) #Ixtgor
         client_socket.send(f"221 {domain_name} Service closing transmission channel\r\n".encode())
         client_socket.close()
 
-print(f"SMTP-server draait op poort {port} en wacht op verbindingen...")
+#print(f"SMTP-server draait op poort {my_port} en wacht op verbindingen...")
 
 
 def start_mail_server(port, mailbox_dir=MAILBOX_DIR):
@@ -106,4 +115,3 @@ if __name__ == "__main__":
         sys.exit(1)
     
     start_mail_server(my_port)
-
