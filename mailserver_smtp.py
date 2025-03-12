@@ -7,7 +7,6 @@ MAILBOX_DIR = "./users"
 
 
 # Maak een socket aan
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = ipv4 adres en SOCK_STREAM = socket communiceert via TCP
 def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de client socket ook niet met TCP werkt?
     try:
         domain_name = "kuleuven.be"  # Hardcode for now, maybe use dynamically fetched domain name later 
@@ -20,9 +19,8 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
         
         while True:
             data = client_socket.recv(1024).decode() #waarom max 1024 bytes ?? ongv 8 zinnen
-            print(data)
-            #if not data: PAS OP, OPNIEUW ACTIVEREN
-            #    break
+            if not data: 
+                break
             #moeten we niet checken dat eerst helo gestuur is, voor mail from...
             # HELO
             if data.startswith("HELO"):
@@ -36,9 +34,6 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
             # RCPT
             elif data.startswith("RCPT TO:"):
                 recipient = data.split(":")[1].strip()
-                #recipient = data.split(":")[1].strip().split('@')[0]
-                print(recipient)
-                print(recipient)
                 #recipient = data.split(":")[1].strip()
                 recipient_domain = data.split(":")[1].strip().split('@')[1]
 
@@ -67,7 +62,7 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 mail_data = f"\n{mail_data}\nReceived: {timestamp}\n."
                 
                 # Save the message to the recipient's mailbox
-                mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox")
+                mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt") #vroeger stond my_mailbox
                 with open(mailbox_path, "a") as mailbox:
                     mailbox.write(mail_data)
                 
