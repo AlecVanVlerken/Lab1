@@ -37,7 +37,7 @@ def handle_client(client_socket, addr):
         while True:
             data = client_socket.recv(1024).decode().strip()
             if not data:
-                continue
+                continue #niet eerder break?
 
             command, *args = data.split()
 
@@ -141,11 +141,11 @@ def handle_client(client_socket, addr):
                             message = POP3_OK + " Message follows\r\n" + email_content + "\r\n."
                             send_response(client_socket, message)
 
-            elif command == POP3_DELE:
+            elif command == POP3_DELE: # NOTE TO SELF: FOUT VOLGENS CHAT TOP Gpt
                 if not authenticated:
                     send_response(client_socket, POP3_ERR + " Not authenticated")
                 elif len(args) != 1 or not args[0].isdigit():
-                    send_response(client_socket, POP3_ERR + " Invalid RETR command")
+                    send_response(client_socket, POP3_ERR + " Invalid DELE command")
                 else:
                     email_index = int(args[0]) - 1
                     mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
@@ -158,6 +158,7 @@ def handle_client(client_socket, addr):
                         if email_index < 0 or email_index >= len(emails):
                             send_response(client_socket, POP3_ERR + " No such message")
                         else:
+                            #if email_index not in marked_for_deletion:
                             marked_for_deletion.append(emails.pop(email_index))
                             with open(mailbox_file, "w") as f:
                                 f.write("\n.\n".join(emails) + "\n.\n" if emails else "")

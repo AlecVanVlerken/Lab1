@@ -64,7 +64,7 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 
                 # Add time to the received message
                 timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
-                mail_data = f"\n{mail_data}\n"
+                mail_data = f"\n{mail_data}"
                 formatted_mail = (
                     f"From: {sender}\n"
                     f"To: {recipient}\n"

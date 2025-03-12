@@ -27,7 +27,7 @@ def send_smtp_command(smtp_socket, command):
     response = smtp_socket.recv(1024).decode()
     print(response)
 
-def check_email_format(from_addr, to_addr, subject, body, username):
+def check_email_format(from_addr, to_addr, subject, body, username): #check body size ?
 
     if from_addr.count('@') != 1 or to_addr.count('@') != 1:
         return False
@@ -96,7 +96,46 @@ def pop3_authenticate(pop3_socket, username, password):
     return True
 
 def list_emails(pop3_socket):
-    return 0 # Implement
+
+#   Retrieves the number of emails using STAT, then for each email sends RETR,
+#   reads the full multi-line response, parses header information, and displays it.
+#   Format: No. <Sender’s email id> <When received, in date : hour : minute> <Subject> 
+    # Send STAT command.
+    pop3_socket.send(f"{POP3_STAT}\r\n".encode())
+    response = pop3_socket.recv(1024).decode()
+    if not response.startswith(POP3_OK):
+        print("Error retrieving mailbox status.")
+        return
+    parts = response.split()
+    try:
+        email_count = int(parts[1])
+    except (IndexError, ValueError):
+        print("Error parsing STAT response.")
+        return
+    
+    print(f"Total emails: {email_count}")
+    
+    # Retrieve and list each email.
+    for i in range(1, email_count + 1):
+        pop3_socket.send(f"{POP3_RETR} {i}\r\n".encode())
+        # Read the initial response line.
+        initial_response = pop3_socket.recv(1024).decode()
+        if not initial_response.startswith(POP3_OK):
+            print(f"Error retrieving email {i}.")
+            continue
+        
+        # Read the multi-line email content (terminated by a single dot on a line).
+        email_lines = []
+        while True:
+            line = pop3_socket.recv(1024).decode()
+            if line.strip() == ".":
+                break
+            email_lines.append(line)
+        email_text = "".join(email_lines)
+        sender, date, subject = parse_email_headers(email_text)
+        # For simplicity, we print the complete date header.
+        # (Optional: Further process 'date' to show only date : hour : minute.)
+        print(f"No. {i} {sender} {date} {subject}")
     
 def retrieve_mailbox(pop3_socket):
     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
@@ -109,6 +148,62 @@ def retrieve_mailbox(pop3_socket):
         email_content = response[len(POP3_OK + " Message follows\r\n"):]
         my_mailbox += email_content
     return my_mailbox
+
+def parse_email_headers(email_text):
+    """
+    Extracts the 'From', 'Date', and 'Subject' headers from the email text.
+    """
+    sender = ""
+    date = ""
+    subject = ""
+    for line in email_text.splitlines():
+        if line.lower().startswith("from:"):
+            sender = line.split(":", 1)[1].strip()
+        elif line.lower().startswith("date:"):
+            date = line.split(":", 1)[1].strip()
+        elif line.lower().startswith("subject:"):
+            subject = line.split(":", 1)[1].strip()
+        # Headers end at the first empty line.
+        if line.strip() == "":
+            break
+    return sender, date, subject
+
+
+def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Implementeren ook voor a en c
+    """
+    Loop for sending POP3 commands to the server.
+    It accepts commands (STAT, LIST, RETR, DELE, RSET, QUIT) and handles multi-line responses
+    for commands like RETR and LIST (terminated by a single dot on a line).
+    """
+    print("\nEnter POP3 commands (STAT, LIST, RETR, DELE, RSET, QUIT):")
+    while True:
+        command = input("POP3> ").strip()
+        if not command:
+            continue  # Skip if nothing was entered
+
+        # Send the command to the server.
+        pop3_socket.send(f"{command}\r\n".encode())
+        
+        # Get the initial response line.
+        response = pop3_socket.recv(1024).decode()
+        print("Server:", response.strip())
+        
+        # If the command is RETR or LIST, the server will send a multi-line response.
+        if command.upper().startswith("RETR") or command.upper().startswith("LIST"):
+            lines = []
+            while True:
+                # Read data from the socket.
+                line = pop3_socket.recv(1024).decode()
+                # A line with just a dot indicates the end of the response.
+                if line.strip() == ".":
+                    break
+                lines.append(line.rstrip("\r\n"))
+            print("\n".join(lines))
+        
+        # Check if the command was QUIT (or if the response contains a goodbye message).
+        if command.upper() == "QUIT":
+            # Optionally, close the socket here if not done elsewhere.
+            break
 
 
 def main():
@@ -164,8 +259,19 @@ def main():
                     else: 
                         print("This is an incorrect format")    
         
-                elif choice == "b":
-                    list_emails(pop3_socket)
+                elif choice == "b": 
+                    # Mail Management 
+                    # Re-create the POP3 socket for a fresh session. ????
+                    if pop3_authenticate(pop3_socket, username, password):
+                        print("\nAuthenticated successfully!")
+                        print("\nRetrieving email list...")
+                        list_emails(pop3_socket)
+                        #loop for further commands
+                        pop3_command_loop(pop3_socket)
+                    else:
+                        print("Authentication failed. Please try again.")
+
+                    '''
                     while True:
                         command = input("\nPOP3 command: ").strip().upper()
                         pop3_socket.send(f"{command}\r\n".encode())
@@ -175,6 +281,7 @@ def main():
                             pop3_socket.close()
                             break
                     break
+                    '''
 
                 elif choice == "c":
                     my_mailbox = retrieve_mailbox(pop3_socket)
