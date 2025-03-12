@@ -52,21 +52,63 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
             elif data.startswith("DATA"):
                 client_socket.send(b"354 Start mail input; end with <CRLF>.<CRLF>\r\n")
                 while True:
-                    line = client_socket.recv(1024).decode()
-                    if line == ".\r\n":
+                    line = client_socket.recv(1024).decode().strip() 
+                    if line == ".": #end of message
                         break
-                    mail_data += line
+                    if line.startswith("Subject:"):
+                        subject = line[len("Subject:"):].strip()
+                        if len(subject) > 150:
+                            subject = subject[:150]  # Trim subject to 150 characters # ZEKER ?
+                    else:
+                        mail_data += line + "\n"
                 
                 # Add time to the received message
                 timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
                 mail_data = f"\n{mail_data}\nReceived: {timestamp}\n."
+                formatted_mail = (
+                    f"From: {sender}\n"
+                    f"To: {recipient}@{recipient_domain}\n"
+                    f"Subject: {subject if subject else 'No Subject'}\n"
+                    f"Received: {timestamp}\n"
+                    f"{mail_data.strip()}\n.\n"
+                    )
                 
                 # Save the message to the recipient's mailbox
                 mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt") #vroeger stond my_mailbox
                 with open(mailbox_path, "a") as mailbox:
-                    mailbox.write(mail_data)
+                    mailbox.write(formatted_mail)
                 
                 client_socket.send(b"250 Message accepted for delivery\r\n")
+
+                '''        
+        # Extract subject if found
+        if line.startswith("Subject:"):
+            subject = line[len("Subject:"):].strip()
+            if len(subject) > 150:
+                subject = subject[:150]  # Trim subject to 150 characters
+        else:
+            mail_data += line + "\n"
+
+    # Add timestamp
+    timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
+
+    # Construct the email in the requested format
+    formatted_mail = (
+        f"From: {sender}\n"
+        f"To: {recipient}@{recipient_domain}\n"
+        f"Subject: {subject if subject else 'No Subject'}\n"
+        f"Received: {timestamp}\n"
+        f"{mail_data.strip()}\n.\n"
+    )
+
+    # Save the formatted email to the recipient's mailbox
+    mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt")
+    with open(mailbox_path, "a") as mailbox:
+        mailbox.write(formatted_mail)
+
+    client_socket.send(b"250 Message accepted for delivery\r\n")
+
+                '''
             
             # QUIT
             elif data.startswith("QUIT"):
