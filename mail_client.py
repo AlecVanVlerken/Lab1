@@ -168,7 +168,7 @@ def parse_email_headers(email_text):
             break
     return sender, date, subject
 
-
+'''
 def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Implementeren ook voor a en c
     """
     Loop for sending POP3 commands to the server.
@@ -181,14 +181,23 @@ def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Imple
         if not command:
             continue  # Skip if nothing was entered
 
+        if 'Return' in command:
+            break
+
         # Send the command to the server.
         pop3_socket.send(f"{command}\r\n".encode())
         
         # Get the initial response line.
         response = pop3_socket.recv(1024).decode()
-        print("Server:", response.strip())
+        print(response)
+
+        if "Goodbye" in response:
+            pop3_socket.close()
+            active = False
+            break
+
         
-        # If the command is RETR or LIST, the server will send a multi-line response.
+        """# If the command is RETR or LIST, the server will send a multi-line response.
         if command.upper().startswith("RETR") or command.upper().startswith("LIST"):
             lines = []
             while True:
@@ -203,8 +212,8 @@ def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Imple
         # Check if the command was QUIT (or if the response contains a goodbye message).
         if command.upper() == "QUIT":
             # Optionally, close the socket here if not done elsewhere.
-            break
-
+            break"""
+'''
 
 def main():
     if len(sys.argv) != 2:
@@ -231,8 +240,9 @@ def main():
         username = input("Enter your username: ")
         password = input("Enter your password: ")
         if pop3_authenticate(pop3_socket, username, password):
+            exit_program = False
 
-            while True:
+            while not exit_program:
 
                 print("\nSelect an option:")
                 print("a) Mail Sending")
@@ -261,6 +271,8 @@ def main():
         
                 elif choice == "b": 
                     # Mail Management 
+                    #pop3_command_loop(pop3_socket)
+                    """
                     # Re-create the POP3 socket for a fresh session. ????
                     if pop3_authenticate(pop3_socket, username, password):
                         print("\nAuthenticated successfully!")
@@ -270,7 +282,7 @@ def main():
                         pop3_command_loop(pop3_socket)
                     else:
                         print("Authentication failed. Please try again.")
-
+                    """
                     '''
                     while True:
                         command = input("\nPOP3 command: ").strip().upper()
@@ -282,6 +294,25 @@ def main():
                             break
                     break
                     '''
+                    while True:
+                        command = input("POP3> ").strip()
+                        if not command:
+                            continue  # Skip if nothing was entered
+
+                        if 'Return' in command:
+                            break
+
+                        # Send the command to the server.
+                        pop3_socket.send(f"{command}\r\n".encode())
+                        
+                        # Get the initial response line.
+                        response = pop3_socket.recv(1024).decode()
+                        print(response)
+
+                        if "Goodbye" in response:
+                            pop3_socket.close()
+                            exit_program = True
+                            break
 
                 elif choice == "c":
                     my_mailbox = retrieve_mailbox(pop3_socket)

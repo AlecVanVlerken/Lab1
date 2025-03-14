@@ -1,6 +1,7 @@
 import socket
 import os
 import sys
+import threading
 
 # POP3 Commands
 POP3_USER = "USER"
@@ -23,7 +24,7 @@ MAILBOX_DIR = "./users"
 def send_response(client_socket, message):
     client_socket.send(f"{message}\r\n".encode())
 
-def handle_client(client_socket, addr):
+def handle_client(client_socket):
     try:
         # Send greeting message
         send_response(client_socket, POP3_OK + " POP3 server ready")
@@ -225,7 +226,8 @@ def start_server(port):
     while True:
         client_socket, addr = server_socket.accept()
         print(f"Connection from {addr}")
-        handle_client(client_socket, addr)
+        client_thread = threading.Thread(target=handle_client, args=(client_socket))
+        client_thread.start()
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
