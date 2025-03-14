@@ -35,7 +35,6 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
             # RCPT
             elif data.startswith("RCPT TO:"):
                 recipient = data.split(":")[1].strip()
-                #recipient = data.split(":")[1].strip()
                 recipient_domain = data.split(":")[1].strip().split('@')[1]
 
                 # Check if the recipient exists

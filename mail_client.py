@@ -141,12 +141,12 @@ def retrieve_mailbox(pop3_socket):
     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
     response = pop3_socket.recv(1024).decode()
     email_count = int(response.split()[1])
-    my_mailbox = ''
+    my_mailbox = []
     for i in range(email_count):
         pop3_socket.send(f"{POP3_RETR} {i+1}\r\n".encode())
         response = pop3_socket.recv(1024).decode()
         email_content = response[len(POP3_OK + " Message follows\r\n"):]
-        my_mailbox += email_content
+        my_mailbox.append(email_content)
     return my_mailbox
 
 def parse_email_headers(email_text):
@@ -325,17 +325,62 @@ def main():
                     if search_choice == "1":
                         word = input("Enter words/sentences to search: ")
                         # Implement email searching based on word
-                        pass
+                        matching_emails = []
+
+                        search_terms = word.split()
+
+                        for email in my_mailbox:
+                            found = False
+                            
+                            for term in search_terms:
+                                if term.lower() in email.lower():
+                                    found = True
+                                    break 
+                            
+                            if found:
+                                matching_emails.append(email)
+                        
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40) 
+                                print(email) 
+                        else:
+                            print("\nNo emails found with the words/sentences.")
                     
                     elif search_choice == "2":
-                        time = input("Enter time (MM/DD/YY): ")
+                        time = input("Enter time (MM/DD/YY): ").strip()
                         # Implement email searching based on time
-                        pass
+                        matching_emails = []
+
+                        for email in my_mailbox:
+                            if f"Received: ({time})" in email:
+                                matching_emails.append(email)
+
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40)
+                                print(email)
+                        else:
+                            print("\nNo emails found for this date.")
                     
                     elif search_choice == "3":
-                        address = input("Enter email address to search: ")
+                        address = input("Enter email address to search: ").strip()
                         # Implement email searching based on address
-                        pass
+                        matching_emails = []
+
+                        for email in my_mailbox:
+                            if f"From: {address}" in email or f"To: {address}" in email:
+                                matching_emails.append(email)
+
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40)
+                                print(email)
+                        else:
+                            print("\nNo emails found with this address.")
 
                 elif choice == "d":
                     smtp_socket.send(f"{SMTP_QUIT}\r\n".encode())
