@@ -30,14 +30,17 @@ def send_smtp_command(smtp_socket, command):
 def check_email_format(from_addr, to_addr, subject, body, username): #check body size ?
 
     if from_addr.count('@') != 1 or to_addr.count('@') != 1:
+        print('1')
         return False
     
-    from_username, from_domain = from_addr.split('@')
-    to_username, to_domain = to_addr.split('@')
+    '''from_username, from_domain = from_addr.split('@')
+    to_username, to_domain = to_addr.split('@')'''
     
-    if not to_username or from_username != username:
+    
+    if not to_addr or from_addr != username:
+        print('2')
         return False
-    
+    '''
     if '.' not in from_domain or '.' not in to_domain:
         return False
     
@@ -49,8 +52,9 @@ def check_email_format(from_addr, to_addr, subject, body, username): #check body
     
     if len(from_domain_parts[-1]) < 2 or len(to_domain_parts[-1]) < 2:
         return False
-
+    '''
     if len(subject) > 150:
+        print('3')
         return False
     
     return True
@@ -219,7 +223,6 @@ def main():
     if len(sys.argv) != 2:
         print("Usage: python mail_client.py <server_IP>")
         sys.exit(1)
-    
     server_ip = sys.argv[1]
     smtp_port = 25
     pop3_port = 110 
@@ -234,9 +237,6 @@ def main():
 
 
     while True:
-        # Create and connect the POP3 socket
-        pop3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        pop3_socket.connect((server_ip, pop3_port))
         username = input("Enter your username: ")
         password = input("Enter your password: ")
         if pop3_authenticate(pop3_socket, username, password):

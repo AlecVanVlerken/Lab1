@@ -210,7 +210,7 @@ def start_server(port):
     while True:
         client_socket, addr = server_socket.accept()
         print(f"Connection from {addr}")
-        client_thread = threading.Thread(target=handle_client, args=(client_socket))
+        client_thread = threading.Thread(target=handle_client, args=(client_socket,))
         client_thread.start()
 
 if __name__ == '__main__':

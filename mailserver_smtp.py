@@ -2,6 +2,7 @@ import socket
 import os
 import datetime
 import threading
+import sys
 
 
 MAILBOX_DIR = "./users"
@@ -106,12 +107,12 @@ def start_mail_server(port, mailbox_dir=MAILBOX_DIR):
     
     while True:
         client_socket, addr = server_socket.accept()
-        client_thread = threading.Thread(target=handle_client, args=(client_socket,))
-        client_thread.start()
         print(f"Connection from {addr}")
+        client_thread = threading.Thread(target=handle_client, args=(client_socket, MAILBOX_DIR))
+        client_thread.start()
+        
 
 if __name__ == "__main__":
-    import sys
 
     if len(sys.argv) != 2:
         print("Usage: python mailserver_smtp.py <port>")
