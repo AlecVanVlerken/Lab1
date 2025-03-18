@@ -163,14 +163,14 @@ def parse_email_headers(email_text):
     for line in email_text.splitlines():
         if line.lower().startswith("from:"):
             sender = line.split(":", 1)[1].strip()
-        elif line.lower().startswith("date:"):
+        elif line.lower().startswith("received:"):
             date = line.split(":", 1)[1].strip()
         elif line.lower().startswith("subject:"):
             subject = line.split(":", 1)[1].strip()
         # Headers end at the first empty line.
         if line.strip() == "":
             break
-    return sender, date, subject
+    return [sender, date, subject]
     
 
 if __name__ == "__main__":
@@ -226,27 +226,60 @@ if __name__ == "__main__":
                         print("This is an incorrect format, tell me why 🎵")    
         
                 elif choice == "b": 
-                    # Mail Management 
-                    #pop3_command_loop(pop3_socket)
+                    # Mail Management - Authenticated user can view and manage emails
+
+                    # Ophalen van de lijst met e-mails bij het starten van Mail Management
+                    pop3_socket.send(f"{POP3_STAT}\r\n".encode())
+                    response = pop3_socket.recv(1024).decode()
+                    
+                    if not response.startswith("+OK"):
+                        print("Fout bij ophalen van mailboxstatus.")
+                    else:
+                        parts = response.split()
+                        try:
+                            email_count = int(parts[1])  # Aantal e-mails in de mailbox
+                        except (IndexError, ValueError):
+                            print("Fout bij verwerken van STAT-antwoord.")
+                            email_count = 0
+
+                        #print(f"Totaal aantal e-mails: {email_count}")
+
+                        if email_count > 0:
+                            # Lijst van e-mails ophalen en weergeven
+                            mails = retrieve_mailbox(pop3_socket)
+                            for mail in mails:
+                                
+                                headers = parse_email_headers(mail)
+                                print(f"{mails.index(mail)+1}. {headers[0]} {headers[1]} {headers[2]}")
+
+                    # Interactieve POP3-opdrachtverwerking
                     while True:
+                        print("\nGeef een POP3-opdracht in (STAT, LIST, RETR <nummer>, DELE <nummer>, RSET, QUIT)")
+                        print("Typ 'Return' om terug te keren naar het hoofdmenu.")
+
                         command = input("POP3> ").strip()
                         if not command:
-                            continue  # Skip if nothing was entered
+                            continue  # Negeer lege invoer
 
-                        if 'Return' in command:
+                        if command.lower() == "return":
+                            print("Terug naar het hoofdmenu...")
                             break
 
-                        # Send the command to the server.
+                        # Verstuur de opdracht naar de server
                         pop3_socket.send(f"{command}\r\n".encode())
-                        
-                        # Get the initial response line.
+
+                        # Ontvang het eerste antwoord
                         response = pop3_socket.recv(1024).decode()
                         print(response)
 
-                        if "Goodbye" in response:
-                            pop3_socket.close()
-                            exit_mail_management = True
-                            break
+                        # Verwerk multi-line antwoorden voor LIST en RETR
+                        if command.startswith("LIST") or command.startswith("RETR"):
+                            while True:
+                                line = pop3_socket.recv(1024).decode()
+                            
+
+
+
 
                 elif choice == "c":
                     my_mailbox = retrieve_mailbox(pop3_socket)
