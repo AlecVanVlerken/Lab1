@@ -33,12 +33,13 @@ def handle_client(client_socket):
         authenticated = False
         current_user = None
         mailbox_path = None
-        marked_for_deletion = [] #zonet toegevoegd, lets check it
+        # We'll store the zero-based indices of messages that should be deleted on QUIT
+        marked_for_deletion = []
 
         while True:
             data = client_socket.recv(1024).decode().strip()
             if not data:
-                continue  # Do not break here; just keep reading.
+                continue  # Keep reading until we get valid data
 
             command, *args = data.split()
 
@@ -76,20 +77,17 @@ def handle_client(client_socket):
                     continue
 
                 if command == POP3_STAT:
-                    # Path to the user's mailbox file
                     mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
-
-                    #STAT is supposed to respond with +OK <# of messages> <octets> even if zero.
+                    # If there's no mailbox file, it implies 0 messages, size 0
                     if not os.path.exists(mailbox_file):
-                        #send_response(client_socket, POP3_ERR + " 0 0")  # No emails, size 0
-                        send_response(client_socket, POP3_OK + " 0 0")  # No emails, size 0
-
+                        send_response(client_socket, POP3_OK + " 0 0") 
                     else:
                         with open(mailbox_file, "r") as f:
                             emails = f.read().strip().split("\n.\n")
 
                         if len(emails) == 0 or emails == [""]:
-                            send_response(client_socket, POP3_ERR + " 0 0")
+                            # 0 messages, 0 size
+                            send_response(client_socket, POP3_OK + " 0 0")
                         else:
                             email_count = len(emails) if emails[0] else 0
                             total_size = os.path.getsize(mailbox_file)
@@ -97,11 +95,9 @@ def handle_client(client_socket):
 
                 elif command == POP3_LIST:
                     mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
-
                     if not os.path.exists(mailbox_file):
-                        #send_response(client_socket, POP3_ERR + " No messages")
+                        # No mailbox means 0 messages
                         send_response(client_socket, POP3_OK + "0 0")
-
                     else:
                         with open(mailbox_file, "r") as f:
                             emails = f.read().strip().split("\n.\n")
@@ -135,77 +131,60 @@ def handle_client(client_socket):
                                 message = POP3_OK + " Message follows\r\n" + email_content + "\r\n."
                                 send_response(client_socket, message)
 
-                # Example commented-out DELE block
-                # (If you want immediate removal commented out, or replaced with index-based marking)
-                #
-                # elif command == POP3_DELE:
-                #     if len(args) != 1 or not args[0].isdigit():
-                #         send_response(client_socket, POP3_ERR + " Invalid DELE command")
-                #     else:
-                #         email_index = int(args[0]) - 1
-                #         mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
-                #         if not os.path.exists(mailbox_file):
-                #             send_response(client_socket, POP3_ERR + " No messages")
-                #         else:
-                #             with open(mailbox_file, "r") as f:
-                #                 emails = f.read().strip().split("\n.\n")
-                #
-                #             if email_index < 0 or email_index >= len(emails):
-                #                 send_response(client_socket, POP3_ERR + " No such message")
-                #             else:
-                #                 marked_for_deletion.append(emails.pop(email_index))
-                #                 with open(mailbox_file, "w") as f:
-                #                     f.write("\n.\n".join(emails) + "\n.\n" if emails else "")
-                #                 send_response(client_socket, POP3_OK + " Message marked for deletion")
+                elif command == POP3_DELE:
+                    if len(args) != 1 or not args[0].isdigit():
+                        send_response(client_socket, POP3_ERR + " Invalid DELE command")
+                    else:
+                        email_index = int(args[0]) - 1
+                        mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
+
+                        if not os.path.exists(mailbox_file):
+                            send_response(client_socket, POP3_ERR + " No messages")
+                        else:
+                            with open(mailbox_file, "r") as f:
+                                emails = f.read().strip().split("\n.\n")
+
+                            if email_index < 0 or email_index >= len(emails):
+                                send_response(client_socket, POP3_ERR + " No such message")
+                            else:
+                                # Mark the index for later deletion on QUIT
+                                if email_index not in marked_for_deletion:
+                                    marked_for_deletion.append(email_index)
+                                send_response(client_socket, POP3_OK + " Message marked for deletion")
 
                 elif command == POP3_RSET:
+                    # "Unmark" the deletion (i.e., restore them all)
                     mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
 
                     if not os.path.exists(mailbox_file):
                         send_response(client_socket, POP3_ERR + " No messages")
                     else:
-                        with open(mailbox_file, "r") as f:
-                            emails = f.read().strip().split("\n.\n")
-
-                        # Add the deleted emails back into the mailbox file
-                        for email in marked_for_deletion:
-                            emails.append(email)
-
-                        with open(mailbox_file, "w") as f:
-                            if emails:
-                                f.write("\n.\n".join(emails) + "\n.\n")
-                            else:
-                                f.write("")
-
+                        # Because we never physically removed the messages from disk
+                        # (only marked them for deletion), we can just clear the indices
                         marked_for_deletion.clear()
                         send_response(client_socket, POP3_OK + " Reset completed")
 
             elif command == POP3_QUIT:
-                # Now we are effectively in the UPDATE state.
-                # Physically remove any messages that were marked during the session.
+                # Now in the UPDATE state: physically remove messages that were marked.
                 mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
 
-                # Only if the mailbox file exists and we actually have messages marked
                 if os.path.exists(mailbox_file) and marked_for_deletion:
                     with open(mailbox_file, "r") as f:
                         emails = f.read().strip().split("\n.\n")
 
-                    # Sort indices in descending order so popping won't offset subsequent indices
+                    # Sort indices in descending order to pop safely
                     for idx in sorted(marked_for_deletion, reverse=True):
                         if 0 <= idx < len(emails):
                             emails.pop(idx)
 
-                    # Rewrite the file with un-deleted messages
+                    # Rewrite the file with the remaining, un-deleted emails
                     with open(mailbox_file, "w") as f:
                         if emails:
                             f.write("\n.\n".join(emails) + "\n.\n")
                         else:
-                            # If all messages are deleted, just write an empty file
                             f.write("")
 
-                # Clear the list now that we've processed it
                 marked_for_deletion.clear()
-
                 send_response(client_socket, POP3_OK + " Goodbye")
                 break
 

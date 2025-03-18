@@ -1,4 +1,4 @@
-From: aurel gay
+From: danny@m
 To: henry@d
 Subject: joupi
 Received: 12/03/2025 : 15:16
@@ -11,4 +11,28 @@ Received: 17/03/2025 : 18:22
 From: alec@v
 To: henry@d
 Kom straks bib om CN te testen.
+.
+From: julie@x
+To: henry@d
+Subject: Meeting verplaatst
+Received: 18/03/2025 : 09:45
+De meeting is verzet naar 14:00. Laat me weten of dat past.
+.
+From: marco@y
+To: henry@d
+Subject: Bestelling binnen
+Received: 18/03/2025 : 11:30
+De bestelling is aangekomen. Je kunt het ophalen in het magazijn.
+.
+From: sophie@z
+To: henry@d
+Subject: Lunch?
+Received: 18/03/2025 : 12:10
+Zin om samen te lunchen vandaag?
+.
+From: alex@m
+To: henry@d
+Subject: Weekend plannen
+Received: 18/03/2025 : 16:55
+Heb je al plannen voor het weekend? Anders kunnen we iets afspreken!
 .

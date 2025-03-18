@@ -59,10 +59,6 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 recipient = data.split(":")[1].strip()
                 recipient_domain = data.split(":")[1].strip().split('@')[1]
 
-                '''# Check if the recipient exists
-                print(f"DEBUG: mailbox_dir = {mailbox_dir}")
-                print(f"DEBUG: recipient = {recipient}")
-                print(f"DEBUG: Full path = {os.path.join(mailbox_dir, recipient)}")'''
 
                 if os.path.exists(os.path.join(mailbox_dir, recipient)):
                     state = "RCPT"
