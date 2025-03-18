@@ -22,7 +22,7 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
         while True:
             data = client_socket.recv(1024).decode() #waarom max 1024 bytes ?? ongv 8 zinnen
             if not data: 
-                break
+                break # WAAROM NIET CONTINUE?
             #moeten we niet checken dat eerst helo gestuur is, voor mail from...
             # HELO
             if data.startswith("HELO"): #wat gebeurt als ik helo niet schrijf ? (telnet)
