@@ -173,96 +173,7 @@ def parse_email_headers(email_text):
     return sender, date, subject
     
 
-<<<<<<< HEAD
-
-def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Implementeren ook voor a en c
-    """
-    Loop for sending POP3 commands to the server.
-    It accepts commands (STAT, LIST, RETR, DELE, RSET, QUIT) and handles multi-line responses
-    for commands like RETR and LIST (terminated by a single dot on a line).
-    """
-    print("\nEnter POP3 commands (STAT, LIST, RETR, DELE, RSET, QUIT):")
-    while True:
-        command = input("POP3> ").strip()
-        if not command:
-            continue  # Skip if nothing was entered
-
-        # Send the command to the server.
-        pop3_socket.send(f"{command}\r\n".encode())
-        
-        # Get the initial response line.
-        response = pop3_socket.recv(1024).decode()
-        print("Server:", response.strip())
-        
-        # If the command is RETR or LIST, the server will send a multi-line response.
-        if command.upper().startswith("RETR") or command.upper().startswith("LIST"):
-            lines = []
-            while True:
-                # Read data from the socket.
-                line = pop3_socket.recv(1024).decode()
-                # A line with just a dot indicates the end of the response.
-                if line.strip() == ".":
-                    break
-                lines.append(line.rstrip("\r\n"))
-            print("\n".join(lines))
-        
-        # Check if the command was QUIT (or if the response contains a goodbye message).
-        if command.upper() == "QUIT":
-            # Optionally, close the socket here if not done elsewhere.
-            break
-
-# Nieuwe functie om alle e-mails op te halen als een lijst van dictionaries (voor mail searching) 
-# CONTROLEER
-def get_all_emails(pop3_socket):
-    pop3_socket.send(f"{POP3_STAT}\r\n".encode())
-    response = pop3_socket.recv(1024).decode()
-    parts = response.split()
-    try:
-        email_count = int(parts[1])
-    except (IndexError, ValueError):
-        print("Error parsing STAT response.")
-        return []
-    emails = []
-    for i in range(1, email_count + 1):
-        pop3_socket.send(f"{POP3_RETR} {i}\r\n".encode())
-        initial_response = pop3_socket.recv(1024).decode()
-        if not initial_response.startswith(POP3_OK):
-            print(f"Error retrieving email {i}.")
-            continue
-        email_lines = []
-        while True:
-            line = pop3_socket.recv(1024).decode()
-            if line.strip() == ".":
-                break
-            email_lines.append(line)
-        email_text = "".join(email_lines)
-        sender, date, subject = parse_email_headers(email_text)
-        emails.append({
-            "from": sender,
-            "date": date,
-            "subject": subject,
-            "full_text": email_text
-        })
-    return emails
-
-    # Zoekfuncties voor mail searching
-def search_emails_by_word(emails, keyword):
-    matches = [email for email in emails if keyword.lower() in email["full_text"].lower()]
-    return matches
-
-def search_emails_by_time(emails, time_query):
-    matches = [email for email in emails if time_query in email["date"]]
-    return matches
-
-def search_emails_by_address(emails, address_query):
-    matches = [email for email in emails if address_query.lower() in email["from"].lower()]
-    return matches
-
-
-def main():
-=======
 if __name__ == "__main__":
->>>>>>> refs/remotes/origin/main
     if len(sys.argv) != 2:
         print("Usage: python mail_client.py <server_IP>")
         sys.exit(1)
@@ -338,13 +249,7 @@ if __name__ == "__main__":
                             break
 
                 elif choice == "c":
-                    # Mail Searching
-                    print("Retrieving all emails for searching...")
-                    #my_mailbox = retrieve_mailbox(pop3_socket)
-                    emails = get_all_emails(pop3_socket)
-                    if not emails:
-                        print("No emails found or error retrieving emails.")
-                        continue
+                    my_mailbox = retrieve_mailbox(pop3_socket)
                     print("Search by:")
                     print("1) Words/Sentences")
                     print("2) Time")
@@ -352,32 +257,6 @@ if __name__ == "__main__":
                     search_choice = input("Enter your choice: ")
                     
                     if search_choice == "1":
-<<<<<<< HEAD
-                        keyword = input("Enter words/sentences to search: ")
-                        matches = search_emails_by_word(emails, keyword)
-                    
-                    elif search_choice == "2":
-                        time = input("Enter time (MM/DD/YY): ")
-                        matches = search_emails_by_time(emails, time)
-
-                    
-                    elif search_choice == "3":
-                        address = input("Enter email address to search: ")
-                        matches = search_emails_by_address(emails, address)
-                    else:
-                        print("Invalid search choice.")
-                        continue
-
-                    if matches:
-                        print("Found emails:")
-                        for index, email in enumerate(matches, start=1):
-                            print(f"No. {index} {email['from']} {email['date']} {email['subject']}")
-                    else:
-                        print("No emails found matching the search criteria.")
-
-
-
-=======
                         word = input("Enter words/sentences to search: ")
                         # Implement email searching based on word
                         matching_emails = []
@@ -436,7 +315,6 @@ if __name__ == "__main__":
                                 print(email)
                         else:
                             print("\nNo emails found with this address.")
->>>>>>> refs/remotes/origin/main
 
                 elif choice == "d":
                     smtp_socket.send(f"{SMTP_QUIT}\r\n".encode())
