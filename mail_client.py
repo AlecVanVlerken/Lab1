@@ -22,69 +22,61 @@ POP3_QUIT = "QUIT"
 POP3_OK = "+OK"
 POP3_ERR = "-ERR"
 
+
 def send_smtp_command(smtp_socket, command):
     smtp_socket.send(f"{command}\r\n".encode())
     response = smtp_socket.recv(1024).decode()
     print(response)
 
-def check_email_format(from_addr, to_addr, subject, body, username): #check body size ?
 
+def check_email_format(from_addr, to_addr, subject, body, username): #check body size ?
+    """Check email format validity."""
     if from_addr.count('@') != 1 or to_addr.count('@') != 1:
         print("There needs to be an '@' in the adresses.")
-        return False   
-    
+        return False      
     if not to_addr or from_addr != username:
         print("The adress doesn't exit or is incorect")
         return False
-
     if len(subject) > 150:
         print('Subject is too long')
-        return False
-    
+        return False   
     return True
 
+
 def send_email(smtp_socket, from_addr, to_addr, subject, body):
-    # Send HELO
+    """Send an email using SMTP."""
     send_smtp_command(smtp_socket, f"{SMTP_HELO} {from_addr.split("@")[1]}")
-    
-    # Send MAIL FROM:
     send_smtp_command(smtp_socket, f"{SMTP_MAIL} {from_addr}")
-    
-    # Send RCPT TO:
     send_smtp_command(smtp_socket, f"{SMTP_RCPT} {to_addr}")
-    
-    # Send DATA
     send_smtp_command(smtp_socket, SMTP_DATA)
     
-    # Send the email content
     smtp_socket.send(f"From: {from_addr}\r\n".encode())
     smtp_socket.send(f"To: {to_addr}\r\n".encode())
     smtp_socket.send(f"Subject: {subject}\r\n".encode())
     smtp_socket.send(f"{body}\r\n".encode()) 
-    smtp_socket.send(b".\r\n")  # End of message
+    smtp_socket.send(b".\r\n")
 
-    # Confirm successful sending
     response = smtp_socket.recv(1024).decode()
     print(response)
 
-# This one should be implemented in popserver.py maybe
+
 def pop3_authenticate(pop3_socket, username, password):
+    """Authenticate user with POP3 server."""
     pop3_socket.send(f"{POP3_USER} {username}\r\n".encode())
     response = pop3_socket.recv(1024).decode()
     if not response.startswith("+OK"):
         print("Authentication failed.")
-        return False
-    
+        return False  
     pop3_socket.send(f"{POP3_PASS} {password}\r\n".encode())
     response = pop3_socket.recv(1024).decode()
     if not response.startswith("+OK"):
         print("Password incorrect.")
         return False
-
     return True
 
     
 def retrieve_mailbox(pop3_socket):
+    """Retrieve emails from POP3 mailbox."""
     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
     response = pop3_socket.recv(1024).decode()
     email_count = int(response.split()[1])
@@ -96,10 +88,9 @@ def retrieve_mailbox(pop3_socket):
         my_mailbox.append(email_content)
     return my_mailbox
 
+
 def parse_email_headers(email_text):
-    """
-    Extracts the 'From', 'Date', and 'Subject' headers from the email text.
-    """
+    """Extract From, Date, and Subject headers."""
     sender = ""
     date = ""
     subject = ""
@@ -110,7 +101,6 @@ def parse_email_headers(email_text):
             date = line.split(":", 1)[1].strip()
         elif line.lower().startswith("subject:"):
             subject = line.split(":", 1)[1].strip()
-        # Headers end at the first empty line.
         if line.strip() == "":
             break
     return [sender, date, subject]
@@ -171,7 +161,6 @@ if __name__ == "__main__":
                 elif choice == "b": 
                     # Mail Management - Authenticated user can view and manage emails
 
-                    # Ophalen van de lijst met e-mails bij het starten van Mail Management
                     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
                     response = pop3_socket.recv(1024).decode()
                     
@@ -180,34 +169,26 @@ if __name__ == "__main__":
                     else:
                         parts = response.split()
                         try:
-                            email_count = int(parts[1])  # Aantal e-mails in de mailbox
+                            email_count = int(parts[1])
                         except (IndexError, ValueError):
                             print("Fout bij verwerken van STAT-antwoord.")
                             email_count = 0
 
-                        #print(f"Totaal aantal e-mails: {email_count}")
-
                         if email_count > 0:
-                            # Lijst van e-mails ophalen en weergeven
                             mails = retrieve_mailbox(pop3_socket)
                             for mail in mails:
                                 
                                 headers = parse_email_headers(mail)
                                 print(f"{mails.index(mail)+1}. {mail.strip().split("\n")[0]} {headers[1]} {headers[2]}")
 
-                    # Interactieve POP3-opdrachtverwerking
                     while True:
                         command = input("POP3> ").strip()
                         if not command:
-                            continue  # Skip if nothing was entered
-
+                            continue 
                         if 'RETURN' in command:
                             break
 
-                        # Send the command to the server.
                         pop3_socket.send(f"{command}\r\n".encode())
-                        
-                        # Get the initial response line.
                         response = pop3_socket.recv(1024).decode()
                         print(response)
 
@@ -232,19 +213,16 @@ if __name__ == "__main__":
                     
                     if search_choice == "1":
                         word = input("Enter words/sentences to search: ")
-                        # Implement email searching based on word
-                        matching_emails = []
 
+                        matching_emails = []
                         search_terms = word.split()
 
                         for email in my_mailbox:
-                            found = False
-                            
+                            found = False                          
                             for term in search_terms:
                                 if term.lower() in email.lower():
                                     found = True
-                                    break 
-                            
+                                    break                           
                             if found:
                                 matching_emails.append(email)
                         
@@ -258,7 +236,6 @@ if __name__ == "__main__":
                     
                     elif search_choice == "2":
                         time = input("Enter time (DD/MM/YY): ").strip()
-                        # Implement email searching based on time
                         matching_emails = []
 
                         for email in my_mailbox:
@@ -275,7 +252,6 @@ if __name__ == "__main__":
                     
                     elif search_choice == "3":
                         address = input("Enter email address to search: ").strip()
-                        # Implement email searching based on address
                         matching_emails = []
 
                         for email in my_mailbox:

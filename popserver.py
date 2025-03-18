@@ -125,8 +125,9 @@ def handle_client(client_socket):
                                 send_response(client_socket, "-ERR" + " No such message")
                             else:
                                 email_content = emails[email_index]
+                                email_content2 = emails[email_index]
                                 size_in_octets = len(email_content.encode('utf-8'))
-                                message = f"{POP3_OK} {size_in_octets} octets\r\n{email_content}\r\n."
+                                message = f"{POP3_OK} {size_in_octets} octets\r\n{email_content2}\r\n."
                                 send_response(client_socket, message)
 
                 elif command == POP3_DELE:
