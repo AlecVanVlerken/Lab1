@@ -258,7 +258,7 @@ if __name__ == "__main__":
                         if not command:
                             continue  # Skip if nothing was entered
 
-                        if 'Return' in command:
+                        if 'RETURN' in command:
                             break
 
                         # Send the command to the server.
@@ -269,7 +269,12 @@ if __name__ == "__main__":
                         print(response)
 
                         if "Goodbye" in response:
+                            smtp_socket.send(f"{SMTP_QUIT}\r\n".encode())
+                            response = smtp_socket.recv(1024).decode()
+                            smtp_socket.close()
                             pop3_socket.close()
+                            print("Exiting the client.")
+                            exit_program = True
                             exit_mail_management = True
                             break
                             
@@ -309,12 +314,12 @@ if __name__ == "__main__":
                             print("\nNo emails found with the words/sentences.")
                     
                     elif search_choice == "2":
-                        time = input("Enter time (MM/DD/YY): ").strip()
+                        time = input("Enter time (DD/MM/YY): ").strip()
                         # Implement email searching based on time
                         matching_emails = []
 
                         for email in my_mailbox:
-                            if f"Received: ({time})" in email:
+                            if f"{time}" in email:
                                 matching_emails.append(email)
 
                         if matching_emails:
