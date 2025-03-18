@@ -31,28 +31,12 @@ def check_email_format(from_addr, to_addr, subject, body, username): #check body
 
     if from_addr.count('@') != 1 or to_addr.count('@') != 1:
         print("There needs to be an '@' in the adresses.")
-        return False
-    
-    '''from_username, from_domain = from_addr.split('@')
-    to_username, to_domain = to_addr.split('@')'''
-    
+        return False   
     
     if not to_addr or from_addr != username:
         print("The adress doesn't exit or is incorect")
         return False
-    '''
-    if '.' not in from_domain or '.' not in to_domain:
-        return False
-    
-    from_domain_parts = from_domain.split('.')
-    to_domain_parts = to_domain.split('.')
-    
-    if len(from_domain_parts) < 2 or len(to_domain_parts) < 2:
-        return False
-    
-    if len(from_domain_parts[-1]) < 2 or len(to_domain_parts[-1]) < 2:
-        return False
-    '''
+
     if len(subject) > 150:
         print('Subject is too long')
         return False
@@ -99,47 +83,6 @@ def pop3_authenticate(pop3_socket, username, password):
 
     return True
 
-def list_emails(pop3_socket):
-
-#   Retrieves the number of emails using STAT, then for each email sends RETR,
-#   reads the full multi-line response, parses header information, and displays it.
-#   Format: No. <Sender’s email id> <When received, in date : hour : minute> <Subject> 
-    # Send STAT command.
-    pop3_socket.send(f"{POP3_STAT}\r\n".encode())
-    response = pop3_socket.recv(1024).decode()
-    if not response.startswith(POP3_OK):
-        print("Error retrieving mailbox status.")
-        return
-    parts = response.split()
-    try:
-        email_count = int(parts[1])
-    except (IndexError, ValueError):
-        print("Error parsing STAT response.")
-        return
-    
-    print(f"Total emails: {email_count}")
-    
-    # Retrieve and list each email.
-    for i in range(1, email_count + 1):
-        pop3_socket.send(f"{POP3_RETR} {i}\r\n".encode())
-        # Read the initial response line.
-        initial_response = pop3_socket.recv(1024).decode()
-        if not initial_response.startswith(POP3_OK):
-            print(f"Error retrieving email {i}.")
-            continue
-        
-        # Read the multi-line email content (terminated by a single dot on a line).
-        email_lines = []
-        while True:
-            line = pop3_socket.recv(1024).decode()
-            if line.strip() == ".":
-                break
-            email_lines.append(line)
-        email_text = "".join(email_lines)
-        sender, date, subject = parse_email_headers(email_text)
-        # For simplicity, we print the complete date header.
-        # (Optional: Further process 'date' to show only date : hour : minute.)
-        print(f"No. {i} {sender} {date} {subject}")
     
 def retrieve_mailbox(pop3_socket):
     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
