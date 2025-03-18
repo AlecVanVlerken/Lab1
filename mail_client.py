@@ -254,23 +254,24 @@ if __name__ == "__main__":
 
                     # Interactieve POP3-opdrachtverwerking
                     while True:
-                        print("\nGeef een POP3-opdracht in (STAT, LIST, RETR <nummer>, DELE <nummer>, RSET, QUIT)")
-                        print("Typ 'Return' om terug te keren naar het hoofdmenu.")
-
                         command = input("POP3> ").strip()
                         if not command:
-                            continue  # Negeer lege invoer
+                            continue  # Skip if nothing was entered
 
-                        if command.lower() == "return":
-                            print("Terug naar het hoofdmenu...")
+                        if 'Return' in command:
                             break
 
-                        # Verstuur de opdracht naar de server
+                        # Send the command to the server.
                         pop3_socket.send(f"{command}\r\n".encode())
-
-                        # Ontvang het eerste antwoord
+                        
+                        # Get the initial response line.
                         response = pop3_socket.recv(1024).decode()
                         print(response)
+
+                        if "Goodbye" in response:
+                            pop3_socket.close()
+                            exit_mail_management = True
+                            break
                             
 
                 elif choice == "c":
