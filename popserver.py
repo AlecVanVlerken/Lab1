@@ -27,7 +27,7 @@ def send_response(client_socket, message):
 def handle_client(client_socket):
     try:
         # Send greeting message
-        send_response(client_socket, POP3_OK + " POP3 server ready")
+        #send_response(client_socket, POP3_OK + " POP3 server ready")
 
         # Variables to track user state
         authenticated = False
@@ -45,35 +45,35 @@ def handle_client(client_socket):
 
             if command == POP3_USER:
                 if authenticated:
-                    send_response(client_socket, POP3_ERR + " Already authenticated")
+                    send_response(client_socket, "-ERR" + " Already authenticated")
                 elif len(args) != 1:
-                    send_response(client_socket, POP3_ERR + " Invalid USER command")
+                    send_response(client_socket, "-ERR" + " Invalid USER command")
                 else:
                     username = args[0]
                     current_user = username
-                    send_response(client_socket, POP3_OK + " User accepted")
+                    send_response(client_socket, "+OK" + " User accepted")
 
             elif command == POP3_PASS:
                 if not current_user:
-                    send_response(client_socket, POP3_ERR + " USER command must be issued first")
+                    send_response(client_socket, "-ERR" + " USER command must be issued first")
                 elif authenticated:
-                    send_response(client_socket, POP3_ERR + " Already authenticated")
+                    send_response(client_socket, "-ERR" + " Already authenticated")
                 elif len(args) != 1:
-                    send_response(client_socket, POP3_ERR + " Invalid PASS command")
+                    send_response(client_socket, "-ERR" + " Invalid PASS command")
                 else:
                     password = args[0]
                     # Check if the user exists and if password matches
                     if authenticate_user(current_user, password):
                         authenticated = True
                         mailbox_path = os.path.join(MAILBOX_DIR, current_user)
-                        send_response(client_socket, POP3_OK + " Password accepted")
+                        send_response(client_socket, "+OK" + " Password accepted")
                     else:
-                        send_response(client_socket, POP3_ERR + " Invalid password")
+                        send_response(client_socket, "-ERR" + " Invalid password")
 
             elif command in [POP3_STAT, POP3_LIST, POP3_RETR, POP3_DELE, POP3_RSET]:
                 # Enforce that the user must be authenticated first
                 if not authenticated:
-                    send_response(client_socket, POP3_ERR + " Bad sequence of commands")
+                    send_response(client_socket, "-ERR" + " Bad sequence of commands")
                     continue
 
                 if command == POP3_STAT:
@@ -103,7 +103,7 @@ def handle_client(client_socket):
                             emails = f.read().strip().split("\n.\n")
 
                         if len(emails) == 0 or emails == [""]:
-                            send_response(client_socket, POP3_ERR + " No messages")
+                            send_response(client_socket, "-ERR" + " No messages")
                         else:
                             message = ""
                             for i, email in enumerate(emails):
@@ -114,18 +114,18 @@ def handle_client(client_socket):
 
                 elif command == POP3_RETR:
                     if len(args) != 1 or not args[0].isdigit():
-                        send_response(client_socket, POP3_ERR + " Invalid RETR command")
+                        send_response(client_socket, "-ERR" + " Invalid RETR command")
                     else:
                         email_index = int(args[0]) - 1
                         mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
                         if not os.path.exists(mailbox_file):
-                            send_response(client_socket, POP3_ERR + " No messages")
+                            send_response(client_socket, "-ERR" + " No messages")
                         else:
                             with open(mailbox_file, "r") as f:
                                 emails = f.read().strip().split("\n.\n")
 
                             if email_index < 0 or email_index >= len(emails):
-                                send_response(client_socket, POP3_ERR + " No such message")
+                                send_response(client_socket, "-ERR" + " No such message")
                             else:
                                 email_content = emails[email_index]
                                 message = POP3_OK + " Message follows\r\n" + email_content + "\r\n."
@@ -133,19 +133,19 @@ def handle_client(client_socket):
 
                 elif command == POP3_DELE:
                     if len(args) != 1 or not args[0].isdigit():
-                        send_response(client_socket, POP3_ERR + " Invalid DELE command")
+                        send_response(client_socket, "-ERR" + " Invalid DELE command")
                     else:
                         email_index = int(args[0]) - 1
                         mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
 
                         if not os.path.exists(mailbox_file):
-                            send_response(client_socket, POP3_ERR + " No messages")
+                            send_response(client_socket, "-ERR" + " No messages")
                         else:
                             with open(mailbox_file, "r") as f:
                                 emails = f.read().strip().split("\n.\n")
 
                             if email_index < 0 or email_index >= len(emails):
-                                send_response(client_socket, POP3_ERR + " No such message")
+                                send_response(client_socket, "-ERR" + " No such message")
                             else:
                                 # Mark the index for later deletion on QUIT
                                 if email_index not in marked_for_deletion:
@@ -157,7 +157,7 @@ def handle_client(client_socket):
                     mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
 
                     if not os.path.exists(mailbox_file):
-                        send_response(client_socket, POP3_ERR + " No messages")
+                        send_response(client_socket, "-ERR" + " No messages")
                     else:
                         # Because we never physically removed the messages from disk
                         # (only marked them for deletion), we can just clear the indices
@@ -189,27 +189,21 @@ def handle_client(client_socket):
                 break
 
             else:
-                send_response(client_socket, POP3_ERR + " Unknown command")
+                send_response(client_socket, "-ERR" + " Unknown command")
 
     finally:
         client_socket.close()
 
-'''
 def authenticate_user(username, password):
     try:
-        users = []  # lijst initialiseren buiten de loop
         with open(USERINFO_FILE, 'r') as file:
             for line in file:
-                # Haal gebruikersnaam en wachtwoord uit de regel (witruimtes weghalen)
-                stored_user, stored_pass = line.strip().split()
-                users.append((stored_user, stored_pass))
-        # Zoek in de lijst naar de tuple met de gegeven gebruikersnaam
-        for stored_user in users:
-            if stored_user == username:
-                return stored_pass.contains(password)
+                stored_user, stored_pass = line.split()
+                if stored_user == username and stored_pass == password:
+                    return True
     except FileNotFoundError:
         return False
-    return False'''
+    return False
 
 def start_server(port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
