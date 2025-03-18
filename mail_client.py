@@ -230,7 +230,7 @@ if __name__ == "__main__":
                             print("\nMatching Emails:")
                             for email in matching_emails:
                                 print("-" * 40) 
-                                print(email) 
+                                print("From:" + email) 
                         else:
                             print("\nNo emails found with the words/sentences.")
                     
@@ -246,7 +246,7 @@ if __name__ == "__main__":
                             print("\nMatching Emails:")
                             for email in matching_emails:
                                 print("-" * 40)
-                                print(email)
+                                print("From:" + email)
                         else:
                             print("\nNo emails found for this date.")
                     
@@ -255,14 +255,14 @@ if __name__ == "__main__":
                         matching_emails = []
 
                         for email in my_mailbox:
-                            if f"From: {address}" in email or f"To: {address}" in email:
+                            if f"{address}" in email or f"To: {address}" in email:
                                 matching_emails.append(email)
 
                         if matching_emails:
                             print("\nMatching Emails:")
                             for email in matching_emails:
                                 print("-" * 40)
-                                print(email)
+                                print("From:" + email)
                         else:
                             print("\nNo emails found with this address.")
 
