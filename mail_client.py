@@ -193,7 +193,7 @@ if __name__ == "__main__":
                             for mail in mails:
                                 
                                 headers = parse_email_headers(mail)
-                                print(f"{mails.index(mail)+1}. {headers[0]} {headers[1]} {headers[2]}")
+                                print(f"{mails.index(mail)+1}. {mail.strip().split("\n")[0]} {headers[1]} {headers[2]}")
 
                     # Interactieve POP3-opdrachtverwerking
                     while True:

@@ -13,11 +13,35 @@ Dag Alec, ik ondervind enkele problemen bij het testen van CN. Kan je later even
 Met vriendelijke groet,  
 Henry
 .
-From: henry@d  
-To: alec@v  
-Subject: Problemen met CN testen  
-Received: 18/03/2025 : 12:15  
-Dag Alec, ik ondervind enkele problemen bij het testen van CN. Kan je later even langskomen in de bib?  
+From: julia@m  
+To: tom@x  
+Subject: Update over project X  
+Received: 18/03/2025 : 13:00  
+Dag Tom, ik heb enkele aanpassingen gemaakt aan het project. Kunnen we later even overleggen?  
+Groeten,  
+Julia  
+.
+From: kevin@r  
+To: marie@y  
+Subject: Vraag over de meeting van morgen  
+Received: 18/03/2025 : 14:20  
+Hey Marie, weet jij of de meeting morgen doorgaat zoals gepland?  
+Groetjes,  
+Kevin  
+.
+From: sofie@q  
+To: daniel@z  
+Subject: Nieuwe documentatie beschikbaar  
+Received: 18/03/2025 : 15:10  
+Dag Daniel, de nieuwe documentatie is nu beschikbaar. Laat me weten als je vragen hebt!  
 Met vriendelijke groet,  
-Henry
+Sofie  
+.
+From: olivier@b  
+To: emma@c  
+Subject: Weekend plannen  
+Received: 18/03/2025 : 16:45  
+Hey Emma, heb je al plannen voor het weekend? Misschien kunnen we iets afspreken!  
+Groetjes,  
+Olivier  
 .
