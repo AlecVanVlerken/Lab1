@@ -76,7 +76,7 @@ def send_email(smtp_socket, from_addr, to_addr, subject, body):
     smtp_socket.send(f"From: {from_addr}\r\n".encode())
     smtp_socket.send(f"To: {to_addr}\r\n".encode())
     smtp_socket.send(f"Subject: {subject}\r\n".encode())
-    smtp_socket.send(f"{body}\r\n".encode())
+    smtp_socket.send(f"{body}\r\n".encode()) 
     smtp_socket.send(b".\r\n")  # End of message
 
     # Confirm successful sending
