@@ -271,15 +271,7 @@ if __name__ == "__main__":
                         # Ontvang het eerste antwoord
                         response = pop3_socket.recv(1024).decode()
                         print(response)
-
-                        # Verwerk multi-line antwoorden voor LIST en RETR
-                        if command.startswith("LIST") or command.startswith("RETR"):
-                            while True:
-                                line = pop3_socket.recv(1024).decode()
                             
-
-
-
 
                 elif choice == "c":
                     my_mailbox = retrieve_mailbox(pop3_socket)

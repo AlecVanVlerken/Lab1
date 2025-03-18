@@ -7,37 +7,36 @@ import sys
 
 MAILBOX_DIR = "./users"
 
-# note: foute inputs en randgevallen vermijden door deze te hardcoden
-# Maak een socket aan
-def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de client socket ook niet met TCP werkt?
+
+def handle_client(client_socket, mailbox_dir):
+    """
+    Handles an SMTP client session, processing commands such as HELO, MAIL FROM, RCPT TO, DATA, and QUIT.
+    
+    Args:
+        client_socket (socket.socket): The socket connected to the client.
+        mailbox_dir (str): The directory where user mailboxes are stored.
+    """
     try:
-        domain_name = "kuleuven.be"  # Hardcode for now, maybe use dynamically fetched domain name later 
+        domain_name = "kuleuven.be"
         client_socket.send(f"220 {domain_name} Service Ready\r\n".encode()) 
 
-        # Bind de socket aan alle IP-adressen van de computer en de opgegeven poort
-        # server_socket.bind(("0.0.0.0", port))  ??? in start_mail_server
         mail_data = ""
         sender, recipient = None, None
-        
-        # state variable to track the SMTP session state
-        state = "INITIAL"  # Will change to GREET after HELO, etc.
+        state = "INITIAL"  # Tracks the SMTP session state
         
         while True:
-            data = client_socket.recv(1024).decode() #waarom max 1024 bytes ?? ongv 8 zinnen
+            data = client_socket.recv(1024).decode()
             if not data: 
-                break # WAAROM NIET CONTINUE?
-            #moeten we niet checken dat eerst helo gestuur is, voor mail from...
-            # HELO
-            if data.startswith("HELO"): #wat gebeurt als ik helo niet schrijf ? (telnet)
+                break
+
+            if data.startswith("HELO"): 
                 if state != "INITIAL":
                     client_socket.send(b"503 Bad sequence of commands\r\n")
                     continue
                 state = "GREET"
                 client_socket.send(f"250 OK Hello {domain_name}\r\n".encode())
             
-            # MAIL
             elif data.startswith("MAIL FROM:"):
-                # Only valid if we have already done HELO (GREET) or if we want to start a new transaction after DATA
                 if state not in ["GREET", "DONE"]:  
                     client_socket.send(b"503 Bad sequence of commands\r\n")
                     continue
@@ -45,20 +44,16 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 state = "MAIL"
                 client_socket.send(f"250 OK Sender {sender}\r\n".encode())
             
-            # RCPT
             elif data.startswith("RCPT TO:"):
-                # Must come after MAIL
                 if state not in ["MAIL", "RCPT"]:
                     client_socket.send(b"503 Bad sequence of commands\r\n")
                     continue
-
                 if not sender:
                     client_socket.send(b"503 Bad sequence of commands: MAIL FROM must come before RCPT TO\r\n")
                     continue
 
                 recipient = data.split(":")[1].strip()
-                recipient_domain = data.split(":")[1].strip().split('@')[1]
-
+                #recipient_domain = data.split(":")[1].strip().split('@')[1]
 
                 if os.path.exists(os.path.join(mailbox_dir, recipient)):
                     state = "RCPT"
@@ -67,9 +62,7 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                     client_socket.send(b"550 No such user\r\n")
                     continue
             
-            # DATA
             elif data.startswith("DATA"):
-                # Must come after at least one RCPT
                 if state != "RCPT":
                     client_socket.send(b"503 Bad sequence of commands\r\n")
                     continue
@@ -77,16 +70,15 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                 client_socket.send(b"354 Start mail input; end with <CRLF>.<CRLF>\r\n")
                 while True:
                     line = client_socket.recv(1024).decode().strip() 
-                    if line == ".": #end of message
+                    if line == ".":
                         break
                     if line.startswith("Subject:"):
                         subject = line[len("Subject:"):].strip()
                         if len(subject) > 150:
-                            subject = subject[:150]  # Trim subject to 150 characters # ZEKER ?
+                            subject = subject[:150]
                     else:
                         mail_data += line + "\n"
                 
-                # Add time to the received message
                 timestamp = datetime.datetime.now().strftime("%d/%m/%Y : %H:%M")
                 mail_data = f"\n{mail_data}"
                 formatted_mail = (
@@ -97,21 +89,14 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
                     f"{mail_data.strip()}\n.\n"
                     )
                 
-                # Save the message to the recipient's mailbox
-                mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt") #vroeger stond my_mailbox
+                mailbox_path = os.path.join(mailbox_dir, recipient, "my_mailbox.txt")
                 with open(mailbox_path, "a") as mailbox:
                     mailbox.write(formatted_mail)
                 
-                client_socket.send(b"250 Message accepted for delivery\r\n")
-                
-                # After DATA is finished, we set the state to allow a new transaction or QUIT
+                client_socket.send(b"250 Message accepted for delivery\r\n")               
                 state = "DONE"
-                # Reset sender, recipient, and mail_data for a new possible transaction
-                sender, recipient = None, None
-                mail_data = ""
+                sender, recipient, mail_data = None, None, ""
 
-            
-            # QUIT
             elif data.startswith("QUIT"):
                 break
     
@@ -121,10 +106,15 @@ def handle_client(client_socket, mailbox_dir): #moeten we niet checken dat de cl
         client_socket.send(f"221 {domain_name} Service closing transmission channel\r\n".encode())
         client_socket.close()
 
-#print(f"SMTP-server draait op poort {my_port} en wacht op verbindingen...")
-
 
 def start_mail_server(port, mailbox_dir=MAILBOX_DIR):
+    """
+    Starts an SMTP mail server that listens for incoming connections and spawns a thread for each client.
+    
+    Args:
+        port (int): The port number the server listens on.
+        mailbox_dir (str): The directory where mailboxes are stored.
+    """
     if not os.path.exists(mailbox_dir):
         print(f"Error: The directory '{mailbox_dir}' does not exist.")
         sys.exit(1)
