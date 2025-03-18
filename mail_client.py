@@ -30,14 +30,17 @@ def send_smtp_command(smtp_socket, command):
 def check_email_format(from_addr, to_addr, subject, body, username): #check body size ?
 
     if from_addr.count('@') != 1 or to_addr.count('@') != 1:
+        print("There needs to be an '@' in the adresses.")
         return False
     
-    from_username, from_domain = from_addr.split('@')
-    to_username, to_domain = to_addr.split('@')
+    '''from_username, from_domain = from_addr.split('@')
+    to_username, to_domain = to_addr.split('@')'''
     
-    if not to_username or from_username != username:
+    
+    if not to_addr or from_addr != username:
+        print("The adress doesn't exit or is incorect")
         return False
-    
+    '''
     if '.' not in from_domain or '.' not in to_domain:
         return False
     
@@ -49,8 +52,9 @@ def check_email_format(from_addr, to_addr, subject, body, username): #check body
     
     if len(from_domain_parts[-1]) < 2 or len(to_domain_parts[-1]) < 2:
         return False
-
+    '''
     if len(subject) > 150:
+        print('Subject is too long')
         return False
     
     return True
@@ -141,12 +145,12 @@ def retrieve_mailbox(pop3_socket):
     pop3_socket.send(f"{POP3_STAT}\r\n".encode())
     response = pop3_socket.recv(1024).decode()
     email_count = int(response.split()[1])
-    my_mailbox = ''
+    my_mailbox = []
     for i in range(email_count):
         pop3_socket.send(f"{POP3_RETR} {i+1}\r\n".encode())
         response = pop3_socket.recv(1024).decode()
         email_content = response[len(POP3_OK + " Message follows\r\n"):]
-        my_mailbox += email_content
+        my_mailbox.append(email_content)
     return my_mailbox
 
 def parse_email_headers(email_text):
@@ -167,7 +171,9 @@ def parse_email_headers(email_text):
         if line.strip() == "":
             break
     return sender, date, subject
+    
 
+<<<<<<< HEAD
 
 def pop3_command_loop(pop3_socket): # controleren en comments veranderen + Implementeren ook voor a en c
     """
@@ -254,10 +260,13 @@ def search_emails_by_address(emails, address_query):
 
 
 def main():
+=======
+if __name__ == "__main__":
+>>>>>>> refs/remotes/origin/main
     if len(sys.argv) != 2:
         print("Usage: python mail_client.py <server_IP>")
         sys.exit(1)
-    
+        
     server_ip = sys.argv[1]
     smtp_port = 25
     pop3_port = 110 
@@ -270,16 +279,15 @@ def main():
     pop3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     pop3_socket.connect((server_ip, pop3_port))
 
+    exit_program = False
 
-    while True:
-        # Create and connect the POP3 socket
-        pop3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        pop3_socket.connect((server_ip, pop3_port))
+    while not exit_program:
         username = input("Enter your username: ")
         password = input("Enter your password: ")
         if pop3_authenticate(pop3_socket, username, password):
+            exit_mail_management = False
 
-            while True:
+            while not exit_mail_management:
 
                 print("\nSelect an option:")
                 print("a) Mail Sending")
@@ -304,31 +312,30 @@ def main():
                         print("Mail sent successfully")
                         send_email(smtp_socket, from_addr, to_addr, subject, body)
                     else: 
-                        print("This is an incorrect format")    
+                        print("This is an incorrect format, tell me why 🎵")    
         
                 elif choice == "b": 
                     # Mail Management 
-                    # Re-create the POP3 socket for a fresh session. ????
-                    if pop3_authenticate(pop3_socket, username, password):
-                        print("\nAuthenticated successfully!")
-                        print("\nRetrieving email list...")
-                        list_emails(pop3_socket)
-                        #loop for further commands
-                        pop3_command_loop(pop3_socket)
-                    else:
-                        print("Authentication failed. Please try again.")
-
-                    '''
+                    #pop3_command_loop(pop3_socket)
                     while True:
-                        command = input("\nPOP3 command: ").strip().upper()
+                        command = input("POP3> ").strip()
+                        if not command:
+                            continue  # Skip if nothing was entered
+
+                        if 'Return' in command:
+                            break
+
+                        # Send the command to the server.
                         pop3_socket.send(f"{command}\r\n".encode())
+                        
+                        # Get the initial response line.
                         response = pop3_socket.recv(1024).decode()
                         print(response)
+
                         if "Goodbye" in response:
                             pop3_socket.close()
+                            exit_mail_management = True
                             break
-                    break
-                    '''
 
                 elif choice == "c":
                     # Mail Searching
@@ -345,6 +352,7 @@ def main():
                     search_choice = input("Enter your choice: ")
                     
                     if search_choice == "1":
+<<<<<<< HEAD
                         keyword = input("Enter words/sentences to search: ")
                         matches = search_emails_by_word(emails, keyword)
                     
@@ -369,6 +377,66 @@ def main():
 
 
 
+=======
+                        word = input("Enter words/sentences to search: ")
+                        # Implement email searching based on word
+                        matching_emails = []
+
+                        search_terms = word.split()
+
+                        for email in my_mailbox:
+                            found = False
+                            
+                            for term in search_terms:
+                                if term.lower() in email.lower():
+                                    found = True
+                                    break 
+                            
+                            if found:
+                                matching_emails.append(email)
+                        
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40) 
+                                print(email) 
+                        else:
+                            print("\nNo emails found with the words/sentences.")
+                    
+                    elif search_choice == "2":
+                        time = input("Enter time (MM/DD/YY): ").strip()
+                        # Implement email searching based on time
+                        matching_emails = []
+
+                        for email in my_mailbox:
+                            if f"Received: ({time})" in email:
+                                matching_emails.append(email)
+
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40)
+                                print(email)
+                        else:
+                            print("\nNo emails found for this date.")
+                    
+                    elif search_choice == "3":
+                        address = input("Enter email address to search: ").strip()
+                        # Implement email searching based on address
+                        matching_emails = []
+
+                        for email in my_mailbox:
+                            if f"From: {address}" in email or f"To: {address}" in email:
+                                matching_emails.append(email)
+
+                        if matching_emails:
+                            print("\nMatching Emails:")
+                            for email in matching_emails:
+                                print("-" * 40)
+                                print(email)
+                        else:
+                            print("\nNo emails found with this address.")
+>>>>>>> refs/remotes/origin/main
 
                 elif choice == "d":
                     smtp_socket.send(f"{SMTP_QUIT}\r\n".encode())
@@ -380,7 +448,6 @@ def main():
                     smtp_socket.close()
                     pop3_socket.close()
                     print("Exiting the client.")
+                    exit_program = True
                     break
-
-if __name__ == "__main__":
-    main()
+    sys.exit(1)
