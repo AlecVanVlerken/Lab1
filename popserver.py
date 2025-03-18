@@ -164,7 +164,7 @@ def handle_client(client_socket):
                         marked_for_deletion.clear()
                         send_response(client_socket, POP3_OK + " Reset completed")
 
-            elif command == POP3_QUIT:
+            elif command == "QUIT":
                 # Now in the UPDATE state: physically remove messages that were marked.
                 mailbox_file = os.path.join(mailbox_path, "my_mailbox.txt")
 

@@ -1,2 +1,2 @@
-alec.vv 12345
-henry.dcx 54321
+alec@v 12345
+henry@d 54321
