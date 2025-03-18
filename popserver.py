@@ -194,16 +194,22 @@ def handle_client(client_socket):
     finally:
         client_socket.close()
 
+'''
 def authenticate_user(username, password):
     try:
+        users = []  # lijst initialiseren buiten de loop
         with open(USERINFO_FILE, 'r') as file:
             for line in file:
-                stored_user, stored_pass = line.split()
-                if stored_user == username and stored_pass == password:
-                    return True
+                # Haal gebruikersnaam en wachtwoord uit de regel (witruimtes weghalen)
+                stored_user, stored_pass = line.strip().split()
+                users.append((stored_user, stored_pass))
+        # Zoek in de lijst naar de tuple met de gegeven gebruikersnaam
+        for stored_user in users:
+            if stored_user == username:
+                return stored_pass.contains(password)
     except FileNotFoundError:
         return False
-    return False
+    return False'''
 
 def start_server(port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
