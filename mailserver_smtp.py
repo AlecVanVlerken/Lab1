@@ -68,11 +68,14 @@ def handle_client(client_socket, mailbox_dir):
                     continue
                 
                 client_socket.send(b"354 Start mail input; end with <CRLF>.<CRLF>\r\n")
+                
                 while True:
                     line = client_socket.recv(1024).decode().strip() 
                     if line == ".":
                         break
-                    if line.startswith("Subject:"):
+                    elif line.startswith("From:") or line.startswith("To:"):
+                        continue
+                    elif line.startswith("Subject:"):
                         subject = line[len("Subject:"):].strip()
                         if len(subject) > 150:
                             subject = subject[:150]
