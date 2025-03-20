@@ -156,7 +156,7 @@ if __name__ == "__main__":
                         print("Mail sent successfully")
                         send_email(smtp_socket, from_addr, to_addr, subject, body)
                     else: 
-                        print("This is an incorrect format, tell me why 🎵")    
+                        print("This is an incorrect format")    
         
                 elif choice == "b": 
                     # Mail Management - Authenticated user can view and manage emails
