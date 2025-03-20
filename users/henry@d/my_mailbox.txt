@@ -25,12 +25,12 @@ De bestelling is aangekomen. Je kunt het ophalen in het magazijn.
 From: sophie@z
 To: henry@d
 Subject: Lunch?
-Received: 18/03/2025 : 12:10
+Received: 19/03/2025 : 12:10
 Zin om samen te lunchen vandaag?
 .
 From: alex@m
 To: henry@d
 Subject: Weekend plannen
-Received: 18/03/2025 : 16:55
+Received: 20/03/2025 : 16:55
 Heb je al plannen voor het weekend? Anders kunnen we iets afspreken!
 .

@@ -182,6 +182,14 @@ if __name__ == "__main__":
                                 print(f"{mails.index(mail)+1}. {mail.strip().split("\n")[0]} {headers[1]} {headers[2]}")
 
                     while True:
+                        print("Available POP3 commands:\n"
+                            "1. STAT - Get mailbox status\n"
+                            "2. LIST - List messages with their sizes\n"
+                            "3. RETR <msg#> - Retrieve a specific email\n"
+                            "4. DELE <msg#> - Mark a message for deletion\n"
+                            "5. RSET - Reset deletion marks\n"
+                            "6. QUIT - End session and delete marked messages\n"
+                            "7. RETURN - Go back to menu")
                         command = input("POP3> ").strip()
                         if not command:
                             continue 
